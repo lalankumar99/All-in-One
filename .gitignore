@@ -1,0 +1,24 @@
+Temporary uploaded and converted media files
+uploads/
+*.mp3
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.m4v
+*.wav
+*.m4a
+*.aac
+*.flac
+*.ogg
+Python cache & virtual environments
+pycache/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+Environment variables & OS files
+.env
+.DS_Store
+Thumbs.db
