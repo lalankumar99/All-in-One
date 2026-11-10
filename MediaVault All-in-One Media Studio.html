@@ -1,0 +1,2424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#060913" />
+  <meta name="description" content="MediaVault – All-in-One Media Studio. Smart social media link detection and studio-grade FFmpeg MP3 audio extraction." />
+  <title>MediaVault — All-in-One Media Studio</title>
+
+  <!-- Preconnect & Clean Typography with System Fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & RESET (Optimized for Low-RAM Mobile GPUs)
+       ========================================================================== */
+    :root {
+      --bg-obsidian: #05070e;
+      --bg-navy-deep: #0a0f1f;
+      --bg-card: #0e152a;
+      --bg-card-elevated: #131c36;
+      --bg-input: #080c18;
+
+      --gold-light: #f6e27a;
+      --gold-primary: #d4af37;
+      --gold-deep: #aa7c11;
+      --gold-glow: rgba(212, 175, 55, 0.16);
+      --gold-border: rgba(212, 175, 55, 0.28);
+      --gold-gradient: linear-gradient(135deg, #f9e498 0%, #d4af37 50%, #9a6f0b 100%);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --border-subtle: rgba(148, 163, 184, 0.14);
+      --border-focus: rgba(212, 175, 55, 0.65);
+
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --success-border: rgba(16, 185, 129, 0.35);
+
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --warning-border: rgba(245, 158, 11, 0.35);
+
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --danger-border: rgba(239, 68, 68, 0.35);
+
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 26px;
+
+      --shadow-card: 0 14px 34px -10px rgba(0, 0, 0, 0.65);
+      --shadow-gold: 0 8px 24px -4px rgba(212, 175, 55, 0.28);
+
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --transition-fast: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-obsidian);
+      background-image:
+        radial-gradient(circle at 15% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 42%),
+        radial-gradient(circle at 85% 12%, rgba(30, 64, 175, 0.12) 0%, transparent 45%),
+        linear-gradient(180deg, #05070e 0%, #090e1c 50%, #05070e 100%);
+      background-attachment: scroll;
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ==========================================================================
+       2. LAYOUT & CONTAINERS
+       ========================================================================== */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    /* ==========================================================================
+       3. PREMIUM NAVIGATION BAR
+       ========================================================================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 12, 24, 0.92);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.85rem 0;
+    }
+
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #16203d, #090d1a);
+      border: 1px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-gold);
+      flex-shrink: 0;
+    }
+
+    .brand-logo svg {
+      width: 22px;
+      height: 22px;
+      color: var(--gold-primary);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .brand-title span {
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .version-pill {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(212, 175, 55, 0.14);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-border);
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.03em;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .nav-links {
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(14, 21, 42, 0.85);
+      border: 1px solid var(--border-subtle);
+      padding: 0.28rem;
+      border-radius: 999px;
+    }
+
+    .nav-link {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      transition: color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Backend Status Pill */
+    .health-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.42rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: border-color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .health-pill:hover {
+      border-color: var(--gold-border);
+    }
+
+    .health-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warning);
+      flex-shrink: 0;
+    }
+
+    .health-pill[data-status="online"] {
+      border-color: var(--success-border);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .health-pill[data-status="online"] .health-dot {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .health-pill[data-status="offline"] {
+      border-color: var(--danger-border);
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .health-pill[data-status="offline"] .health-dot {
+      background: var(--danger);
+    }
+
+    /* ==========================================================================
+       4. HERO SECTION
+       ========================================================================== */
+    .hero {
+      padding: 2.5rem 0 1.75rem;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.95rem;
+      border-radius: 999px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-light);
+      font-size: 0.76rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: clamp(1.85rem, 4.5vw, 3.1rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      max-width: 780px;
+      margin: 0 auto 0.9rem;
+    }
+
+    .hero-title .gold-accent {
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-description {
+      color: var(--text-secondary);
+      font-size: clamp(0.95rem, 2vw, 1.08rem);
+      max-width: 640px;
+      margin: 0 auto 1.5rem;
+    }
+
+    /* System Telemetry Strip */
+    .telemetry-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+
+    .telemetry-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.38rem 0.8rem;
+      border-radius: var(--radius-sm);
+      background: rgba(14, 21, 42, 0.78);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+    }
+
+    .telemetry-chip strong {
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       5. DASHBOARD GRID & PREMIUM CARDS
+       ========================================================================== */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding-bottom: 3rem;
+    }
+
+    .studio-card {
+      background: linear-gradient(180deg, rgba(19, 28, 54, 0.82) 0%, rgba(11, 17, 34, 0.94) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition-smooth);
+    }
+
+    .studio-card:hover {
+      border-color: rgba(212, 175, 55, 0.25);
+    }
+
+    .studio-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+      opacity: 0.55;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.35rem;
+      flex-wrap: wrap;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-light);
+      flex-shrink: 0;
+    }
+
+    .card-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .card-subtitle {
+      font-size: 0.83rem;
+      color: var(--text-secondary);
+      margin-top: 0.15rem;
+    }
+
+    .card-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       6. SOCIAL MEDIA LINK DETECTION MODULE
+       ========================================================================== */
+    .url-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.35rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .input-leading-icon {
+      position: absolute;
+      left: 1rem;
+      color: var(--text-muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .url-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.9rem 5.4rem 0.9rem 2.85rem;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .url-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .url-input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    .input-actions-right {
+      position: absolute;
+      right: 0.55rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .icon-btn {
+      padding: 0.42rem 0.6rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .icon-btn:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-color: var(--gold-border);
+      background: rgba(212, 175, 55, 0.12);
+    }
+
+    /* Buttons */
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.9rem 1.4rem;
+      border-radius: var(--radius-md);
+      background: var(--gold-gradient);
+      color: #05070e;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+      box-shadow: var(--shadow-gold);
+      transition: transform var(--transition-fast), filter var(--transition-fast);
+    }
+
+    .btn-gold:hover:not(:disabled) {
+      filter: brightness(1.07);
+      transform: translateY(-1px);
+    }
+
+    .btn-gold:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.78rem 1.15rem;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.88rem;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      border-color: var(--gold-border);
+      background: rgba(212, 175, 55, 0.1);
+    }
+
+    /* Supported Platform Cards (Instagram, Facebook, YouTube) */
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .platforms-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .platform-card {
+      background: rgba(8, 12, 24, 0.75);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.95rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.5rem;
+      transition: border-color var(--transition-smooth), transform var(--transition-fast), background var(--transition-smooth);
+    }
+
+    .platform-card:hover {
+      border-color: rgba(212, 175, 55, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .platform-card.active-detected {
+      border-color: var(--gold-primary);
+      background: linear-gradient(180deg, rgba(212, 175, 55, 0.16) 0%, rgba(14, 21, 42, 0.9) 100%);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .platform-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .platform-card[data-platform="Instagram"] .platform-icon-box {
+      color: #ec4899;
+    }
+    .platform-card[data-platform="Facebook"] .platform-icon-box {
+      color: #3b82f6;
+    }
+    .platform-card[data-platform="YouTube"] .platform-icon-box {
+      color: #ef4444;
+    }
+
+    .platform-name {
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .platform-domains {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .platform-status-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+    }
+
+    .platform-card.active-detected .platform-status-tag {
+      background: var(--gold-gradient);
+      color: #05070e;
+      font-weight: 700;
+    }
+
+    /* Detected Platform Result Box */
+    .detect-result-box {
+      background: rgba(8, 12, 24, 0.88);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.15rem;
+      transition: border-color var(--transition-smooth);
+    }
+
+    .detect-result-box[data-state="detected"] {
+      border-color: var(--gold-border);
+      background: linear-gradient(145deg, rgba(212, 175, 55, 0.09), rgba(8, 12, 24, 0.95));
+    }
+
+    .detect-result-box[data-state="unsupported"] {
+      border-color: var(--warning-border);
+      background: var(--warning-bg);
+    }
+
+    .detect-result-box[data-state="error"] {
+      border-color: var(--danger-border);
+      background: var(--danger-bg);
+    }
+
+    .detect-result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.65rem;
+    }
+
+    .detect-platform-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .policy-pill {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+    }
+
+    .detect-message {
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.9rem;
+    }
+
+    .detect-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    /* ==========================================================================
+       7. QUALITY & FORMAT SELECTOR
+       ========================================================================== */
+    .quality-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.35rem;
+    }
+
+    .quality-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 0.85rem;
+      border-radius: var(--radius-sm);
+      background: rgba(8, 12, 24, 0.75);
+      border: 1px solid var(--border-subtle);
+      text-align: left;
+      transition: border-color var(--transition-fast);
+    }
+
+    .quality-option.active-format {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(14, 21, 42, 0.95) 100%);
+      border-color: var(--gold-primary);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .quality-option.disabled-format {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .quality-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .quality-name {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .quality-spec {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .badge-active {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      background: var(--gold-gradient);
+      color: #05070e;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-soon {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.16rem 0.48rem;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       8. DRAG & DROP FILE UPLOAD & CONVERSION STUDIO
+       ========================================================================== */
+    .dropzone {
+      border: 2px dashed rgba(212, 175, 55, 0.35);
+      border-radius: var(--radius-lg);
+      background: rgba(8, 12, 24, 0.65);
+      padding: 1.75rem 1.25rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+      margin-bottom: 1.15rem;
+      position: relative;
+    }
+
+    .dropzone:hover,
+    .dropzone.drag-over {
+      border-color: var(--gold-primary);
+      background: rgba(212, 175, 55, 0.07);
+    }
+
+    .dropzone-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .dropzone-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      margin: 0 auto 0.85rem;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-light);
+    }
+
+    .dropzone-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .dropzone-sub {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.85rem;
+    }
+
+    .ext-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .ext-pill {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.15rem 0.48rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    /* Selected File Info Card */
+    .selected-file-card {
+      display: none;
+      background: rgba(8, 12, 24, 0.9);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .selected-file-card.visible {
+      display: block;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .file-badge {
+      padding: 0.45rem 0.6rem;
+      border-radius: 8px;
+      background: var(--gold-gradient);
+      color: #05070e;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .file-name-wrap {
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size-text {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .capacity-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .capacity-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gold-gradient);
+      border-radius: 999px;
+      transition: width var(--transition-smooth);
+    }
+
+    /* Conversion Progress & Output Box */
+    .conversion-status-box {
+      display: none;
+      background: rgba(8, 12, 24, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .conversion-status-box.visible {
+      display: block;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      font-weight: 600;
+      margin-bottom: 0.55rem;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gold-gradient);
+      border-radius: 999px;
+      transition: width 220ms ease;
+    }
+
+    /* Ready Download Card */
+    .download-ready-box {
+      display: none;
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.14), rgba(8, 12, 24, 0.95));
+      border: 1px solid var(--success-border);
+      border-radius: var(--radius-lg);
+      padding: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .download-ready-box.visible {
+      display: block;
+    }
+
+    .download-ready-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .audio-preview {
+      width: 100%;
+      height: 38px;
+      margin-bottom: 0.9rem;
+      border-radius: 8px;
+    }
+
+    .convert-actions-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .convert-actions-row .btn-gold {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    /* ==========================================================================
+       9. DOWNLOAD HISTORY MODULE
+       ========================================================================== */
+    .history-card {
+      margin-top: 0;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-md);
+      background: rgba(8, 12, 24, 0.78);
+      border: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+
+    .history-item-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .history-item-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+    }
+
+    .history-item-sub {
+      font-size: 0.73rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* ==========================================================================
+       10. TOAST NOTIFICATIONS & INLINE BANNER
+       ========================================================================== */
+    .toast-region {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-width: min(380px, calc(100vw - 2.5rem));
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-md);
+      background: #0d1428;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+      font-size: 0.85rem;
+      transition: opacity var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .toast[data-type="success"] {
+      border-color: var(--success-border);
+      border-left: 4px solid var(--success);
+    }
+
+    .toast[data-type="error"] {
+      border-color: var(--danger-border);
+      border-left: 4px solid var(--danger);
+    }
+
+    .toast[data-type="warning"] {
+      border-color: var(--warning-border);
+      border-left: 4px solid var(--warning);
+    }
+
+    .toast-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .toast-title {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .toast-desc {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+
+    /* Lightweight Spinner */
+    .spinner {
+      width: 17px;
+      height: 17px;
+      border: 2px solid rgba(5, 7, 14, 0.25);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================================================
+       11. PROFESSIONAL FOOTER
+       ========================================================================== */
+    .footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(5, 7, 14, 0.9);
+      padding: 1.75rem 0;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ==========================================================================
+       12. RESPONSIVE BREAKPOINTS
+       ========================================================================== */
+    @media (min-width: 640px) {
+      .url-input-group {
+        flex-direction: row;
+      }
+      .url-input-group .btn-gold {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .quality-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 960px) {
+      .nav-links {
+        display: flex;
+      }
+      .studio-grid {
+        grid-template-columns: 1fr 1.1fr;
+        align-items: start;
+      }
+      .history-section-span {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .studio-card {
+        padding: 1.15rem;
+      }
+      .platforms-grid {
+        grid-template-columns: 1fr;
+      }
+      .platform-card {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+        padding: 0.75rem 0.9rem;
+      }
+      .platform-card-left {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. PREMIUM NAVIGATION BAR
+       ======================================================================== -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="#" class="brand" aria-label="MediaVault Home">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">
+            <span>MediaVault</span>
+            <span class="version-pill" id="navVersionBadge">v1.0.0</span>
+          </div>
+          <span class="brand-subtitle">All-in-One Media Studio</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Studio Sections">
+        <a href="#detector-section" class="nav-link">Link Inspector</a>
+        <a href="#converter-section" class="nav-link">MP3 Studio</a>
+        <a href="#history-section" class="nav-link">Session Vault</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="health-pill" id="healthStatusBtn" data-status="checking" title="Click to re-check Flask backend health">
+          <span class="health-dot" id="healthDot"></span>
+          <span id="healthText">Checking API...</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       2. HERO SECTION
+       ======================================================================== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        Studio-Grade Audio &amp; Link Intelligence
+      </div>
+      <h1 class="hero-title">
+        Precision Media Inspection &amp; <span class="gold-accent">MP3 Audio Mastering</span>
+      </h1>
+      <p class="hero-description">
+        Verify social media links across Instagram, Facebook, and YouTube or convert your local video and audio files into 192kbps stereo MP3 streams powered by FFmpeg.
+      </p>
+
+      <div class="telemetry-bar" aria-label="Backend Specifications">
+        <div class="telemetry-chip">
+          Engine: <strong id="specBackend">Flask + FFmpeg</strong>
+        </div>
+        <div class="telemetry-chip">
+          Audio Output: <strong>MP3 · 192kbps · 44.1kHz</strong>
+        </div>
+        <div class="telemetry-chip">
+          Max Upload Limit: <strong id="specMaxUpload">100 MB</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       3. MAIN STUDIO DASHBOARD
+       ======================================================================== -->
+  <main class="container">
+    <div class="studio-grid">
+
+      <!-- ====================================================================
+           LEFT COLUMN: SOCIAL MEDIA LINK DETECTOR (/api/detect)
+           ==================================================================== -->
+      <section class="studio-card" id="detector-section" aria-labelledby="detector-heading">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="card-title" id="detector-heading">Social Media Link Inspector</h2>
+              <p class="card-subtitle">Verify platform authenticity &amp; official access options</p>
+            </div>
+          </div>
+          <span class="card-tag">POST /api/detect</span>
+        </div>
+
+        <!-- URL Input Form -->
+        <form id="detectForm" class="url-input-group" novalidate>
+          <div class="input-wrapper">
+            <span class="input-leading-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+            <input
+              type="url"
+              id="mediaUrlInput"
+              class="url-input"
+              placeholder="Paste Instagram, Facebook, or YouTube URL..."
+              maxlength="2048"
+              autocomplete="off"
+              aria-label="Social Media URL"
+            />
+            <div class="input-actions-right">
+              <button type="button" class="icon-btn" id="pasteUrlBtn" title="Paste URL from clipboard">
+                Paste
+              </button>
+              <button type="button" class="icon-btn" id="clearUrlBtn" title="Clear URL input" style="display: none;">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-gold" id="detectSubmitBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span id="detectBtnText">Detect Link</span>
+          </button>
+        </form>
+
+        <!-- Supported Platforms Showcase -->
+        <div class="section-label">
+          <span>Supported Verification Platforms</span>
+          <span id="platformMatchCounter">Ready to scan</span>
+        </div>
+
+        <div class="platforms-grid" id="platformsGrid">
+          <!-- Instagram Card -->
+          <div class="platform-card" data-platform="Instagram">
+            <div class="platform-card-left">
+              <div class="platform-icon-box" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+              </div>
+              <div>
+                <div class="platform-name">Instagram</div>
+                <div class="platform-domains">instagram.com</div>
+              </div>
+            </div>
+            <span class="platform-status-tag" data-role="status">Supported</span>
+          </div>
+
+          <!-- Facebook Card -->
+          <div class="platform-card" data-platform="Facebook">
+            <div class="platform-card-left">
+              <div class="platform-icon-box" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                </svg>
+              </div>
+              <div>
+                <div class="platform-name">Facebook</div>
+                <div class="platform-domains">facebook.com · fb.watch</div>
+              </div>
+            </div>
+            <span class="platform-status-tag" data-role="status">Supported</span>
+          </div>
+
+          <!-- YouTube Card -->
+          <div class="platform-card" data-platform="YouTube">
+            <div class="platform-card-left">
+              <div class="platform-icon-box" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+                </svg>
+              </div>
+              <div>
+                <div class="platform-name">YouTube</div>
+                <div class="platform-domains">youtube.com · youtu.be</div>
+              </div>
+            </div>
+            <span class="platform-status-tag" data-role="status">Supported</span>
+          </div>
+        </div>
+
+        <!-- Detection Output Panel -->
+        <div class="detect-result-box" id="detectResultBox" data-state="idle" aria-live="polite">
+          <div class="detect-result-header">
+            <div class="detect-platform-badge" id="detectResultTitle">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Awaiting URL Inspection</span>
+            </div>
+            <span class="policy-pill" id="detectPolicyBadge">Official Access Policy</span>
+          </div>
+          <p class="detect-message" id="detectResultMessage">
+            Enter a link from Instagram, Facebook, or YouTube above. Direct social media stream scraping is disabled by policy; MediaVault verifies link domains and provides direct navigation to official sources.
+          </p>
+          <div class="detect-actions" id="detectActionsRow" style="display: none;">
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-gold"
+              id="openOriginalLinkBtn"
+              style="padding: 0.65rem 1.1rem; font-size: 0.85rem;"
+            >
+              <span>Open Original Content</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+            <button type="button" class="btn-secondary" id="resetDetectBtn" style="padding: 0.65rem 1rem; font-size: 0.85rem;">
+              Reset Inspector
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           RIGHT COLUMN: AUTHORIZED MEDIA CONVERSION TO MP3 (/api/convert)
+           ==================================================================== -->
+      <section class="studio-card" id="converter-section" aria-labelledby="converter-heading">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </div>
+            <div>
+              <h2 class="card-title" id="converter-heading">Authorized Media to MP3 Studio</h2>
+              <p class="card-subtitle">Convert local video &amp; audio files up to 100 MB into 192kbps MP3</p>
+            </div>
+          </div>
+          <span class="card-tag">POST /api/convert</span>
+        </div>
+
+        <!-- 4. QUALITY AND FORMAT SELECTOR -->
+        <div class="section-label">
+          <span>Output Quality &amp; Format Profile</span>
+          <span>FFmpeg libmp3lame</span>
+        </div>
+
+        <div class="quality-grid" role="radiogroup" aria-label="Output Format Selection">
+          <!-- Active Supported Option -->
+          <div class="quality-option active-format" role="radio" aria-checked="true" tabindex="0">
+            <div class="quality-info">
+              <div class="quality-name">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                MP3 Audio Only
+              </div>
+              <span class="quality-spec">192 kbps · 44.1 kHz · Stereo (Active Backend Mode)</span>
+            </div>
+            <span class="badge-active">Active</span>
+          </div>
+
+          <!-- Disabled Video Options (Honest Backend Representation) -->
+          <div class="quality-option disabled-format" role="radio" aria-checked="false" aria-disabled="true" title="Video passthrough coming in a future update">
+            <div class="quality-info">
+              <span class="quality-name">Original Quality</span>
+              <span class="quality-spec">Source Stream</span>
+            </div>
+            <span class="badge-soon">Later</span>
+          </div>
+
+          <div class="quality-option disabled-format" role="radio" aria-checked="false" aria-disabled="true" title="4K video conversion coming in a future update">
+            <div class="quality-info">
+              <span class="quality-name">4K Ultra HD</span>
+              <span class="quality-spec">2160p Video</span>
+            </div>
+            <span class="badge-soon">Later</span>
+          </div>
+
+          <div class="quality-option disabled-format" role="radio" aria-checked="false" aria-disabled="true" title="2K video conversion coming in a future update">
+            <div class="quality-info">
+              <span class="quality-name">2K QHD</span>
+              <span class="quality-spec">1440p Video</span>
+            </div>
+            <span class="badge-soon">Later</span>
+          </div>
+
+          <div class="quality-option disabled-format" role="radio" aria-checked="false" aria-disabled="true" title="1080p video conversion coming in a future update">
+            <div class="quality-info">
+              <span class="quality-name">1080p Full HD</span>
+              <span class="quality-spec">1920×1080</span>
+            </div>
+            <span class="badge-soon">Later</span>
+          </div>
+
+          <div class="quality-option disabled-format" role="radio" aria-checked="false" aria-disabled="true" title="720p video conversion coming in a future update">
+            <div class="quality-info">
+              <span class="quality-name">720p HD</span>
+              <span class="quality-spec">1280×720</span>
+            </div>
+            <span class="badge-soon">Later</span>
+          </div>
+
+          <div class="quality-option disabled-format" role="radio" aria-checked="false" aria-disabled="true" title="480p video conversion coming in a future update">
+            <div class="quality-info">
+              <span class="quality-name">480p SD</span>
+              <span class="quality-spec">854×480</span>
+            </div>
+            <span class="badge-soon">Later</span>
+          </div>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div class="dropzone" id="dropzone">
+          <input
+            type="file"
+            id="mediaFileInput"
+            class="dropzone-input"
+            accept=".mp4,.mov,.mkv,.webm,.m4v,.mp3,.wav,.m4a,.aac,.flac,.ogg"
+            aria-label="Upload video or audio file for MP3 conversion"
+          />
+          <div class="dropzone-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="dropzone-title">Drag &amp; drop your media file or tap to browse</div>
+          <div class="dropzone-sub">Maximum file size: 100 MB · Processed securely via FFmpeg</div>
+          <div class="ext-pills" aria-label="Supported file extensions">
+            <span class="ext-pill">MP4</span>
+            <span class="ext-pill">MOV</span>
+            <span class="ext-pill">MKV</span>
+            <span class="ext-pill">WEBM</span>
+            <span class="ext-pill">M4V</span>
+            <span class="ext-pill">MP3</span>
+            <span class="ext-pill">WAV</span>
+            <span class="ext-pill">M4A</span>
+            <span class="ext-pill">AAC</span>
+            <span class="ext-pill">FLAC</span>
+            <span class="ext-pill">OGG</span>
+          </div>
+        </div>
+
+        <!-- Selected File Metadata Display -->
+        <div class="selected-file-card" id="selectedFileCard" aria-live="polite">
+          <div class="file-row">
+            <div class="file-meta">
+              <span class="file-badge" id="selectedFileExt">MP4</span>
+              <div class="file-name-wrap">
+                <div class="file-name" id="selectedFileName">video.mp4</div>
+                <div class="file-size-text" id="selectedFileSize">0.00 MB / 100 MB limit</div>
+              </div>
+            </div>
+            <button type="button" class="icon-btn" id="removeFileBtn" title="Remove selected file">
+              Remove
+            </button>
+          </div>
+          <div class="capacity-bar-track" title="Percentage of 100 MB upload allowance">
+            <div class="capacity-bar-fill" id="fileCapacityBar"></div>
+          </div>
+        </div>
+
+        <!-- Convert Action Buttons -->
+        <div class="convert-actions-row">
+          <button type="button" class="btn-gold" id="convertBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="convertBtnText">Convert to MP3 Audio</span>
+          </button>
+          <button type="button" class="btn-secondary" id="resetConverterBtn">
+            Reset Studio
+          </button>
+        </div>
+
+        <!-- Active Conversion Loading & Progress State -->
+        <div class="conversion-status-box" id="conversionStatusBox" aria-live="polite">
+          <div class="status-row">
+            <span id="conversionStageText">Uploading &amp; transcoding with FFmpeg...</span>
+            <span id="conversionElapsedText" style="font-family: var(--font-mono); color: var(--gold-light);">0s</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="conversionProgressBar"></div>
+          </div>
+        </div>
+
+        <!-- Ready MP3 Download Panel -->
+        <div class="download-ready-box" id="downloadReadyBox" aria-live="polite">
+          <div class="download-ready-header">
+            <div style="display: flex; align-items: center; gap: 0.55rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.4">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <div>
+                <div style="font-weight: 700; font-size: 0.94rem;">MP3 Conversion Complete</div>
+                <div id="convertedFileMeta" style="font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);">MediaVault_Audio.mp3</div>
+              </div>
+            </div>
+          </div>
+
+          <audio controls preload="metadata" class="audio-preview" id="audioPreviewPlayer"></audio>
+
+          <div class="convert-actions-row">
+            <a href="#" download="MediaVault_Audio.mp3" class="btn-gold" id="downloadMp3Btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download MP3</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           BOTTOM SPAN: SESSION CONVERSION & DOWNLOAD HISTORY
+           ==================================================================== -->
+      <section class="studio-card history-card history-section-span" id="history-section" aria-labelledby="history-heading">
+        <div class="card-header" style="margin-bottom: 1rem;">
+          <div class="card-title-group">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h2 class="card-title" id="history-heading">Session Conversion Vault</h2>
+              <p class="card-subtitle">Instant access to MP3 files converted during this session</p>
+            </div>
+          </div>
+          <button type="button" class="icon-btn" id="clearHistoryBtn" style="display: none;">
+            Clear Vault
+          </button>
+        </div>
+
+        <div class="history-list" id="historyList">
+          <div class="history-empty" id="historyEmptyState">
+            No MP3 conversions recorded in this session yet. Upload a media file above to begin.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       4. TOAST NOTIFICATION CONTAINER
+       ======================================================================== -->
+  <div class="toast-region" id="toastRegion" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- ========================================================================
+       5. PROFESSIONAL FOOTER
+       ======================================================================== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong style="color: var(--text-primary);">MediaVault Studio</strong> · Powered by Flask &amp; FFmpeg Audio Engine
+      </div>
+      <div class="footer-links">
+        <span>Max Upload: 100 MB</span>
+        <span>·</span>
+        <span>192kbps Stereo MP3</span>
+        <span>·</span>
+        <span>Authorized Media Processing Only</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       6. VANILLA JAVASCRIPT APPLICATION LOGIC
+       ======================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ----------------------------------------------------------------------
+         CONSTANTS MATCHING app.py EXACTLY
+         ---------------------------------------------------------------------- */
+      const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+      const ALLOWED_EXTENSIONS = new Set([
+        'mp4', 'mov', 'mkv', 'webm', 'm4v',
+        'mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg'
+      ]);
+
+      /* ----------------------------------------------------------------------
+         APPLICATION STATE
+         ---------------------------------------------------------------------- */
+      const state = {
+        backendOnline: false,
+        isDetecting: false,
+        isConverting: false,
+        selectedFile: null,
+        activeBlobUrl: null,
+        historyItems: [], // { id, originalName, outputName, sizeFormatted, timestamp, blobUrl }
+        conversionTimerId: null
+      };
+
+      /* ----------------------------------------------------------------------
+         DOM ELEMENT REFERENCES
+         ---------------------------------------------------------------------- */
+      const dom = {
+        navVersionBadge: document.getElementById('navVersionBadge'),
+        healthStatusBtn: document.getElementById('healthStatusBtn'),
+        healthText: document.getElementById('healthText'),
+        specBackend: document.getElementById('specBackend'),
+        specMaxUpload: document.getElementById('specMaxUpload'),
+
+        // Link Detector
+        detectForm: document.getElementById('detectForm'),
+        mediaUrlInput: document.getElementById('mediaUrlInput'),
+        pasteUrlBtn: document.getElementById('pasteUrlBtn'),
+        clearUrlBtn: document.getElementById('clearUrlBtn'),
+        detectSubmitBtn: document.getElementById('detectSubmitBtn'),
+        detectBtnText: document.getElementById('detectBtnText'),
+        platformCards: document.querySelectorAll('.platform-card'),
+        platformMatchCounter: document.getElementById('platformMatchCounter'),
+        detectResultBox: document.getElementById('detectResultBox'),
+        detectResultTitle: document.getElementById('detectResultTitle'),
+        detectPolicyBadge: document.getElementById('detectPolicyBadge'),
+        detectResultMessage: document.getElementById('detectResultMessage'),
+        detectActionsRow: document.getElementById('detectActionsRow'),
+        openOriginalLinkBtn: document.getElementById('openOriginalLinkBtn'),
+        resetDetectBtn: document.getElementById('resetDetectBtn'),
+
+        // Media Converter
+        dropzone: document.getElementById('dropzone'),
+        mediaFileInput: document.getElementById('mediaFileInput'),
+        selectedFileCard: document.getElementById('selectedFileCard'),
+        selectedFileExt: document.getElementById('selectedFileExt'),
+        selectedFileName: document.getElementById('selectedFileName'),
+        selectedFileSize: document.getElementById('selectedFileSize'),
+        fileCapacityBar: document.getElementById('fileCapacityBar'),
+        removeFileBtn: document.getElementById('removeFileBtn'),
+        convertBtn: document.getElementById('convertBtn'),
+        convertBtnText: document.getElementById('convertBtnText'),
+        resetConverterBtn: document.getElementById('resetConverterBtn'),
+        conversionStatusBox: document.getElementById('conversionStatusBox'),
+        conversionStageText: document.getElementById('conversionStageText'),
+        conversionElapsedText: document.getElementById('conversionElapsedText'),
+        conversionProgressBar: document.getElementById('conversionProgressBar'),
+        downloadReadyBox: document.getElementById('downloadReadyBox'),
+        convertedFileMeta: document.getElementById('convertedFileMeta'),
+        audioPreviewPlayer: document.getElementById('audioPreviewPlayer'),
+        downloadMp3Btn: document.getElementById('downloadMp3Btn'),
+
+        // History & Toasts
+        historyList: document.getElementById('historyList'),
+        historyEmptyState: document.getElementById('historyEmptyState'),
+        clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+        toastRegion: document.getElementById('toastRegion')
+      };
+
+      /* ----------------------------------------------------------------------
+         UTILITY FUNCTIONS
+         ---------------------------------------------------------------------- */
+      function formatBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+        const value = bytes / Math.pow(1024, index);
+        return value.toFixed(index === 0 ? 0 : 2) + ' ' + units[index];
+      }
+
+      function getExtension(filename) {
+        if (!filename || typeof filename !== 'string' || !filename.includes('.')) {
+          return '';
+        }
+        return filename.slice(filename.lastIndexOf('.') + 1).toLowerCase();
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      function showToast(title, message, type = 'success') {
+        // Keep maximum 3 toasts in DOM to save mobile memory
+        while (dom.toastRegion.children.length >= 3) {
+          dom.toastRegion.removeChild(dom.toastRegion.firstElementChild);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.setAttribute('data-type', type);
+
+        toast.innerHTML = `
+          <div class="toast-content">
+            <div class="toast-title">${escapeHtml(title)}</div>
+            <div class="toast-desc">${escapeHtml(message)}</div>
+          </div>
+          <button type="button" class="icon-btn" aria-label="Dismiss notification">✕</button>
+        `;
+
+        const closeBtn = toast.querySelector('button');
+        const removeToast = () => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        };
+
+        closeBtn.addEventListener('click', removeToast, { once: true });
+        dom.toastRegion.appendChild(toast);
+
+        setTimeout(removeToast, 5000);
+      }
+
+      /* ----------------------------------------------------------------------
+         1. BACKEND HEALTH CHECK: GET /api/health
+         ---------------------------------------------------------------------- */
+      async function checkBackendHealth(manualTrigger = false) {
+        dom.healthStatusBtn.setAttribute('data-status', 'checking');
+        dom.healthText.textContent = 'Checking API...';
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        try {
+          const response = await fetch('/api/health', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+             cache: 'no-store',
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (data && data.success && data.status === 'online') {
+            state.backendOnline = true;
+            dom.healthStatusBtn.setAttribute('data-status', 'online');
+            dom.healthText.textContent = 'Backend Online';
+
+            if (data.version) {
+              dom.navVersionBadge.textContent = `v${data.version}`;
+            }
+            if (data.backend && data.converter) {
+              dom.specBackend.textContent = `${data.backend} + ${data.converter}`;
+            }
+            if (data.max_upload_size) {
+              dom.specMaxUpload.textContent = data.max_upload_size;
+            }
+
+            if (manualTrigger) {
+              showToast('Backend Online', `${data.app || 'MediaVault'} (${data.converter || 'FFmpeg'}) is ready.`, 'success');
+            }
+          } else {
+            throw new Error('Unexpected health response');
+          }
+        } catch (err) {
+          clearTimeout(timeoutId);
+          state.backendOnline = false;
+          dom.healthStatusBtn.setAttribute('data-status', 'offline');
+          dom.healthText.textContent = 'Backend Offline';
+
+          if (manualTrigger) {
+            showToast(
+              'Backend Unreachable',
+              'Ensure app.py is running on your Flask server and accessible via /api/health.',
+              'error'
+            );
+          }
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         2. SOCIAL MEDIA DETECTION: POST /api/detect
+         ---------------------------------------------------------------------- */
+      function highlightDetectedPlatform(platformName) {
+        dom.platformCards.forEach((card) => {
+          const cardPlatform = card.getAttribute('data-platform');
+          const statusBadge = card.querySelector('[data-role="status"]');
+          if (platformName && cardPlatform === platformName) {
+            card.classList.add('active-detected');
+            if (statusBadge) statusBadge.textContent = 'Detected';
+          } else {
+            card.classList.remove('active-detected');
+            if (statusBadge) statusBadge.textContent = 'Supported';
+          }
+        });
+
+        dom.platformMatchCounter.textContent = platformName
+          ? `Matched: ${platformName}`
+          : 'Ready to scan';
+      }
+
+      function resetDetectionUI() {
+        dom.mediaUrlInput.value = '';
+        dom.clearUrlBtn.style.display = 'none';
+        highlightDetectedPlatform(null);
+        dom.detectResultBox.setAttribute('data-state', 'idle');
+        dom.detectResultTitle.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>Awaiting URL Inspection</span>
+        `;
+        dom.detectPolicyBadge.textContent = 'Official Access Policy';
+        dom.detectResultMessage.textContent =
+          'Enter a link from Instagram, Facebook, or YouTube above. Direct social media stream scraping is disabled by policy; MediaVault verifies link domains and provides direct navigation to official sources.';
+        dom.detectActionsRow.style.display = 'none';
+        dom.openOriginalLinkBtn.setAttribute('href', '#');
+      }
+
+      async function handleDetectSubmit(event) {
+        event.preventDefault();
+        if (state.isDetecting) return;
+
+        const rawUrl = dom.mediaUrlInput.value.trim();
+
+        if (!rawUrl) {
+          showToast('URL Required', 'Please enter a social media URL to inspect.', 'warning');
+          dom.mediaUrlInput.focus();
+          return;
+        }
+
+        if (rawUrl.length > 2048) {
+          showToast('URL Too Long', 'URL must not exceed 2048 characters.', 'error');
+          return;
+        }
+
+        state.isDetecting = true;
+        dom.detectSubmitBtn.disabled = true;
+        dom.detectBtnText.innerHTML = `<span class="spinner"></span> Scanning...`;
+
+        try {
+          const response = await fetch('/api/detect', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ url: rawUrl })
+          });
+
+          let data = {};
+          try {
+            data = await response.json();
+          } catch (_) {
+            throw new Error('Invalid JSON response from server.');
+          }
+
+          if (!response.ok || data.success === false) {
+            const errMsg = data.error || `Request failed (${response.status})`;
+            highlightDetectedPlatform(null);
+            dom.detectResultBox.setAttribute('data-state', 'error');
+            dom.detectResultTitle.innerHTML = `<span>Inspection Error</span>`;
+            dom.detectPolicyBadge.textContent = 'Invalid Input';
+            dom.detectResultMessage.textContent = errMsg;
+            dom.detectActionsRow.style.display = 'none';
+            showToast('Detection Error', errMsg, 'error');
+            return;
+          }
+
+          // Platform Detected
+          if (data.detected && data.platform) {
+            highlightDetectedPlatform(data.platform);
+            dom.detectResultBox.setAttribute('data-state', 'detected');
+            dom.detectResultTitle.innerHTML = `
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f6e27a" stroke-width="2.3">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>${escapeHtml(data.platform)} Link Verified</span>
+            `;
+            dom.detectPolicyBadge.textContent = data.download_supported
+              ? 'Download Supported'
+              : 'Direct Download Disabled';
+            dom.detectResultMessage.textContent =
+              data.message || `${data.platform} link detected.`;
+
+            if (data.open_url) {
+              dom.openOriginalLinkBtn.setAttribute('href', data.open_url);
+              dom.openOriginalLinkBtn.style.display = 'inline-flex';
+            } else {
+              dom.openOriginalLinkBtn.style.display = 'none';
+            }
+            dom.detectActionsRow.style.display = 'flex';
+            showToast(`${data.platform} Detected`, data.message || 'Verified platform URL.', 'success');
+          } else {
+            // Unsupported or unrecognized domain
+            highlightDetectedPlatform(null);
+            dom.detectResultBox.setAttribute('data-state', 'unsupported');
+            dom.detectResultTitle.innerHTML = `<span>Unsupported or Invalid Platform</span>`;
+            dom.detectPolicyBadge.textContent = 'Unrecognized Host';
+            dom.detectResultMessage.textContent =
+              data.message || 'Unsupported or invalid platform URL. Supported: Instagram, Facebook, YouTube.';
+            dom.openOriginalLinkBtn.style.display = 'none';
+            dom.detectActionsRow.style.display = 'flex';
+            showToast('Unsupported URL', data.message || 'Only Instagram, Facebook, and YouTube URLs are supported.', 'warning');
+          }
+        } catch (error) {
+          highlightDetectedPlatform(null);
+          dom.detectResultBox.setAttribute('data-state', 'error');
+          dom.detectResultTitle.innerHTML = `<span>Network / Server Error</span>`;
+          dom.detectPolicyBadge.textContent = 'Offline';
+          dom.detectResultMessage.textContent =
+            'Unable to reach /api/detect. Verify that the Flask backend is running.';
+          dom.detectActionsRow.style.display = 'none';
+          showToast('Connection Failed', 'Could not connect to /api/detect.', 'error');
+          checkBackendHealth(false);
+        } finally {
+          state.isDetecting = false;
+          dom.detectSubmitBtn.disabled = false;
+          dom.detectBtnText.textContent = 'Detect Link';
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         3. FILE SELECTION, VALIDATION & MP3 CONVERSION: POST /api/convert
+         ---------------------------------------------------------------------- */
+      function validateAndSelectFile(file) {
+        if (!file) return;
+
+        // Check empty file
+        if (file.size === 0) {
+          showToast('Empty File', 'The selected file contains 0 bytes. Please choose a valid media file.', 'error');
+          return;
+        }
+
+        // Check extension against ALLOWED_EXTENSIONS in app.py
+        const ext = getExtension(file.name);
+        if (!ext || !ALLOWED_EXTENSIONS.has(ext)) {
+          showToast(
+            'Unsupported Format',
+            `".${ext || 'unknown'}" is not supported. Allowed: MP4, MOV, MKV, WEBM, M4V, MP3, WAV, M4A, AAC, FLAC, OGG.`,
+            'error'
+          );
+          return;
+        }
+
+        // Check max size (100 MB)
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+          showToast(
+            'File Too Large',
+            `Selected file is ${formatBytes(file.size)}. Maximum upload size is 100 MB.`,
+            'error'
+          );
+          return;
+        }
+
+        state.selectedFile = file;
+
+        // Update UI
+        dom.selectedFileExt.textContent = ext.toUpperCase();
+        dom.selectedFileName.textContent = file.name;
+        dom.selectedFileSize.textContent = `${formatBytes(file.size)} / 100 MB max`;
+
+        const percentUsed = Math.min(100, Math.max(2, (file.size / MAX_FILE_SIZE_BYTES) * 100));
+        dom.fileCapacityBar.style.width = `${percentUsed.toFixed(1)}%`;
+
+        dom.selectedFileCard.classList.add('visible');
+        dom.downloadReadyBox.classList.remove('visible');
+        dom.convertBtn.disabled = false;
+      }
+
+      function clearSelectedFile() {
+        state.selectedFile = null;
+        dom.mediaFileInput.value = '';
+        dom.selectedFileCard.classList.remove('visible');
+        dom.fileCapacityBar.style.width = '0%';
+        dom.convertBtn.disabled = true;
+      }
+
+      function resetConverterStudio() {
+        if (state.isConverting) return;
+        clearSelectedFile();
+        dom.conversionStatusBox.classList.remove('visible');
+        dom.conversionProgressBar.style.width = '0%';
+        dom.downloadReadyBox.classList.remove('visible');
+        dom.audioPreviewPlayer.pause();
+        dom.audioPreviewPlayer.removeAttribute('src');
+        dom.audioPreviewPlayer.load();
+      }
+
+      function addSessionHistoryItem(originalName, blobUrl, blobSize) {
+        const item = {
+          id: Date.now().toString(36),
+          originalName,
+          outputName: 'MediaVault_Audio.mp3',
+          sizeFormatted: formatBytes(blobSize),
+          timeFormatted: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          blobUrl
+        };
+
+        state.historyItems.unshift(item);
+        renderHistoryList();
+      }
+
+      function renderHistoryList() {
+        if (state.historyItems.length === 0) {
+          dom.historyEmptyState.style.display = 'block';
+          dom.clearHistoryBtn.style.display = 'none';
+          // Remove existing item nodes
+          Array.from(dom.historyList.querySelectorAll('.history-item')).forEach((el) => el.remove());
+          return;
+        }
+
+        dom.historyEmptyState.style.display = 'none';
+        dom.clearHistoryBtn.style.display = 'inline-flex';
+
+        // Clear and render cleanly
+        Array.from(dom.historyList.querySelectorAll('.history-item')).forEach((el) => el.remove());
+
+        const fragment = document.createDocumentFragment();
+        state.historyItems.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'history-item';
+          row.innerHTML = `
+            <div class="history-item-info">
+              <span class="file-badge">MP3</span>
+              <div>
+                <div class="history-item-title" title="${escapeHtml(item.originalName)}">${escapeHtml(item.originalName)} → ${escapeHtml(item.outputName)}</div>
+                <div class="history-item-sub">${escapeHtml(item.sizeFormatted)} · 192kbps · ${escapeHtml(item.timeFormatted)}</div>
+              </div>
+            </div>
+            <a href="${item.blobUrl}" download="${escapeHtml(item.outputName)}" class="btn-secondary" style="padding: 0.48rem 0.9rem; font-size: 0.8rem;">
+              Download MP3
+            </a>
+          `;
+          fragment.appendChild(row);
+        });
+
+        dom.historyList.appendChild(fragment);
+      }
+
+      function clearSessionHistory() {
+        // Revoke all stored Blob URLs to free RAM on low-end mobile devices
+        state.historyItems.forEach((item) => {
+          if (item.blobUrl) {
+            URL.revokeObjectURL(item.blobUrl);
+          }
+        });
+        state.historyItems = [];
+        renderHistoryList();
+        showToast('Vault Cleared', 'Session download history and temporary memory buffers released.', 'success');
+      }
+
+      async function handleConvertFile() {
+        if (state.isConverting || !state.selectedFile) return;
+
+        const file = state.selectedFile;
+        state.isConverting = true;
+
+        // Disable controls during active conversion
+        dom.convertBtn.disabled = true;
+        dom.removeFileBtn.disabled = true;
+        dom.resetConverterBtn.disabled = true;
+        dom.mediaFileInput.disabled = true;
+        dom.downloadReadyBox.classList.remove('visible');
+
+        dom.convertBtnText.innerHTML = `<span class="spinner"></span> Converting to MP3...`;
+        dom.conversionStatusBox.classList.add('visible');
+        dom.conversionStageText.textContent = 'Uploading & transcoding via FFmpeg (192kbps)...';
+        dom.conversionElapsedText.textContent = '0s';
+        dom.conversionProgressBar.style.width = '15%';
+
+        const startTime = Date.now();
+        let progressEstimate = 15;
+
+        state.conversionTimerId = setInterval(() => {
+          const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+          dom.conversionElapsedText.textContent = `${elapsedSec}s`;
+
+          if (progressEstimate < 90) {
+            progressEstimate += 4;
+            dom.conversionProgressBar.style.width = `${progressEstimate}%`;
+          }
+          if (elapsedSec > 4) {
+            dom.conversionStageText.textContent = 'Encoding stereo MP3 stream (44.1kHz)...';
+          }
+        }, 600);
+
+        // Strict timeout matching app.py MAX_CONVERSION_SECONDS (180s)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 185000);
+
+        try {
+          // Exact FormData structure expected by app.py: request.files["file"]
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const response = await fetch('/api/convert', {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            let errorMessage = `Conversion failed (HTTP ${response.status}).`;
+            try {
+              const errJson = await response.json();
+              if (errJson && errJson.error) {
+                errorMessage = errJson.error;
+              }
+            } catch (_) {
+              if (response.status === 413) {
+                errorMessage = 'Maximum upload size is 100 MB.';
+              } else if (response.status === 408) {
+                errorMessage = 'Conversion timed out. Try a smaller media file.';
+              }
+            }
+            throw new Error(errorMessage);
+          }
+
+          // Strict requirement: Use response.blob() for binary MP3 download
+          const mp3Blob = await response.blob();
+
+          if (!mp3Blob || mp3Blob.size === 0) {
+            throw new Error('Received an empty MP3 response from server.');
+          }
+
+          dom.conversionProgressBar.style.width = '100%';
+          dom.conversionStageText.textContent = 'MP3 Audio Ready!';
+
+          const blobUrl = URL.createObjectURL(mp3Blob);
+          state.activeBlobUrl = blobUrl;
+
+          // Configure Download Button & Audio Preview
+          const downloadFilename = 'MediaVault_Audio.mp3';
+          dom.downloadMp3Btn.setAttribute('href', blobUrl);
+          dom.downloadMp3Btn.setAttribute('download', downloadFilename);
+          dom.convertedFileMeta.textContent = `${downloadFilename} · ${formatBytes(mp3Blob.size)} · 192kbps Stereo`;
+          dom.audioPreviewPlayer.src = blobUrl;
+
+          dom.downloadReadyBox.classList.add('visible');
+
+          // Trigger automatic temporary download link in JS as requested
+          const tempLink = document.createElement('a');
+          tempLink.style.display = 'none';
+          tempLink.href = blobUrl;
+          tempLink.download = downloadFilename;
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+
+          // Save to Session History Vault
+          addSessionHistoryItem(file.name, blobUrl, mp3Blob.size);
+
+          showToast(
+            'MP3 Conversion Successful',
+            `Converted "${file.name}" (${formatBytes(mp3Blob.size)}) to 192kbps MP3.`,
+            'success'
+          );
+        } catch (error) {
+          clearTimeout(timeoutId);
+          dom.conversionStatusBox.classList.remove('visible');
+
+          const isAbort = error && error.name === 'AbortError';
+          const friendlyError = isAbort
+            ? 'Conversion timed out. Try a smaller media file.'
+            : (error && error.message) || 'Unable to convert file. Verify the backend is online.';
+
+          showToast('Conversion Failed', friendlyError, 'error');
+          checkBackendHealth(false);
+        } finally {
+          if (state.conversionTimerId) {
+            clearInterval(state.conversionTimerId);
+            state.conversionTimerId = null;
+          }
+          state.isConverting = false;
+          dom.convertBtn.disabled = !state.selectedFile;
+          dom.removeFileBtn.disabled = false;
+          dom.resetConverterBtn.disabled = false;
+          dom.mediaFileInput.disabled = false;
+          dom.convertBtnText.textContent = 'Convert to MP3 Audio';
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         EVENT LISTENERS SETUP
+         ---------------------------------------------------------------------- */
+      function initEventListeners() {
+        // Health Check Button
+        dom.healthStatusBtn.addEventListener('click', () => checkBackendHealth(true));
+
+        // URL Input Controls
+        dom.mediaUrlInput.addEventListener('input', () => {
+          dom.clearUrlBtn.style.display = dom.mediaUrlInput.value.length > 0 ? 'inline-flex' : 'none';
+        });
+
+        dom.clearUrlBtn.addEventListener('click', () => {
+          dom.mediaUrlInput.value = '';
+          dom.clearUrlBtn.style.display = 'none';
+          dom.mediaUrlInput.focus();
+        });
+
+        dom.pasteUrlBtn.addEventListener('click', async () => {
+          if (!navigator.clipboard || !navigator.clipboard.readText) {
+            showToast('Clipboard Notice', 'Please use long-press or Ctrl+V to paste your link.', 'warning');
+            dom.mediaUrlInput.focus();
+            return;
+          }
+          try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+              dom.mediaUrlInput.value = text.trim();
+              dom.clearUrlBtn.style.display = 'inline-flex';
+              showToast('Link Pasted', 'Ready to inspect URL.', 'success');
+            }
+          } catch (_) {
+            dom.mediaUrlInput.focus();
+            showToast('Paste Permission', 'Tap inside the URL field and paste manually.', 'warning');
+          }
+        });
+
+        // Detect Form Submit & Reset
+        dom.detectForm.addEventListener('submit', handleDetectSubmit);
+        dom.resetDetectBtn.addEventListener('click', resetDetectionUI);
+
+        // Drag & Drop File Upload Events
+        ['dragenter', 'dragover'].forEach((eventName) => {
+          dom.dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!state.isConverting) {
+              dom.dropzone.classList.add('drag-over');
+            }
+          });
+        });
+
+        ['dragleave', 'drop'].forEach((eventName) => {
+          dom.dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dom.dropzone.classList.remove('drag-over');
+          });
+        });
+
+        dom.dropzone.addEventListener('drop', (e) => {
+          if (state.isConverting) return;
+          const files = e.dataTransfer && e.dataTransfer.files;
+          if (files && files.length > 0) {
+            validateAndSelectFile(files[0]);
+          }
+        });
+
+        dom.mediaFileInput.addEventListener('change', (e) => {
+          const files = e.target.files;
+          if (files && files.length > 0) {
+            validateAndSelectFile(files[0]);
+          }
+        });
+
+        dom.removeFileBtn.addEventListener('click', clearSelectedFile);
+        dom.convertBtn.addEventListener('click', handleConvertFile);
+        dom.resetConverterBtn.addEventListener('click', resetConverterStudio);
+        dom.clearHistoryBtn.addEventListener('click', clearSessionHistory);
+      }
+
+      /* ----------------------------------------------------------------------
+         INITIALIZE APPLICATION
+         ---------------------------------------------------------------------- */
+      initEventListeners();
+      checkBackendHealth(false);
+    })();
+  </script>
+</body>
+</html>
